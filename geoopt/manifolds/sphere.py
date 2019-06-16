@@ -23,6 +23,7 @@ class Sphere(Manifold):
     name = "Sphere"
     reversible = False
     _retr_transp_default_preference = "2y"
+    eps = 1e-7
 
     def _check_shape(self, x, name):
         dim_is_ok = x.dim() >= 1
@@ -48,7 +49,13 @@ class Sphere(Manifold):
         return (u * v).sum(-1, keepdim=keepdim)
 
     def _projx(self, x):
-        return x / x.norm(dim=-1, keepdim=True)
+        norm = x.norm(dim=-1, keepdim=True)
+        # Avoid any chance of getting NaNs
+        if torch.sum(norm < self.eps) > 0:
+            print('project zero error!')
+            ut = ut + (norm_ut < eps)
+            norm = x.norm(dim=-1, keepdim=True)
+        return x / norm
 
     def _proju(self, x, u):
         return u - (x * u).sum(dim=-1, keepdim=True) * x
@@ -56,6 +63,11 @@ class Sphere(Manifold):
     def _expmap(self, x, u, t):
         ut = u * t
         norm_ut = ut.norm(dim=-1, keepdim=True)
+        if torch.sum(norm_ut < self.eps) > 0:
+            print('expmap zero error!')
+            ut = ut + (norm_ut < eps) 
+            norm_ut = ut.norm(dim=-1, keepdim=True)
+
         exp = x * torch.cos(norm_ut) + ut * torch.sin(norm_ut) / norm_ut
         retr = self._projx(x + ut)
         cond = norm_ut > 1e-3
@@ -94,7 +106,8 @@ class Sphere(Manifold):
         return torch.where(cond, u * dist / u.norm(dim=-1, keepdim=True), u)
 
     def _dist(self, x, y, keepdim):
-        inner = self._inner(None, x, y, keepdim=keepdim).clamp(-1, 1)
+        # Ensure gradient doesn't go to infinity and keep things differentiable
+        inner = (1 - 10*self.eps)*self._inner(None, x, y, keepdim=keepdim).clamp(-1 + self.eps, 1 - self.eps)
         return torch.acos(inner)
 
 

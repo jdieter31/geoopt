@@ -83,6 +83,9 @@ def _project(x, c, dim: int = -1, eps: float = None):
     if eps is None:
         eps = BALL_EPS[x.dtype]
     maxnorm = (1 - eps) / (c ** 0.5)
+    # Ensure this works when using double precision
+    maxnorm = maxnorm.to(norm)  
+
     cond = norm > maxnorm
     projected = x / norm * maxnorm
     return torch.where(cond, projected, x)

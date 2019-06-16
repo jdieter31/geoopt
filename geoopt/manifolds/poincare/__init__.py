@@ -22,7 +22,7 @@ class PoincareBall(Manifold):
     ndim = 1
     reversible = False
     _default_order = 1
-    name = "Poincare ball"
+    name = "PoincareBall"
 
     def __init__(self, c=1.0):
         super().__init__()

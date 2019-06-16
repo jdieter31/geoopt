@@ -12,6 +12,7 @@ from .manifolds import (
     SphereSubspaceIntersection,
     SphereSubspaceComplementIntersection,
     PoincareBall,
+    Product
 )
 
 __version__ = "0.0.1"

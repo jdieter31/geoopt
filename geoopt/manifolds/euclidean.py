@@ -3,6 +3,8 @@ from .base import Manifold
 __all__ = ["Euclidean"]
 
 
+import torch
+
 class Euclidean(Manifold):
     """
     Simple Euclidean manifold
@@ -25,7 +27,7 @@ class Euclidean(Manifold):
         return x + t * u
 
     def _inner(self, x, u, v, keepdim):
-        return u * v
+        return torch.sum(u * v, -1, keepdim=keepdim)
 
     def _proju(self, x, u):
         return u
@@ -51,4 +53,5 @@ class Euclidean(Manifold):
         return y - x
 
     def _dist(self, x, y, keepdim):
-        return (x - y).abs()
+        out = torch.norm(x - y, p=None, dim=-1, keepdim=keepdim)
+        return out
