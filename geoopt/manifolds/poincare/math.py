@@ -79,16 +79,13 @@ def project(x, *, c=1.0, dim=-1, eps=None):
 
 
 def _project(x, c, dim: int = -1, eps: float = None):
-    norm = x.norm(dim=dim, keepdim=True, p=2).clamp_min(MIN_NORM)
     if eps is None:
         eps = BALL_EPS[x.dtype]
     maxnorm = (1 - eps) / (c ** 0.5)
-    # Ensure this works when using double precision
-    maxnorm = maxnorm.to(norm)  
 
-    cond = norm > maxnorm
-    projected = x / norm * maxnorm
-    return torch.where(cond, projected, x)
+    x.renorm_(2, -1, maxnorm)
+
+    return x
 
 
 def lambda_x(x, *, c=1.0, keepdim=False, dim=-1):
@@ -1304,4 +1301,4 @@ def egrad2rgrad(x, grad, *, c=1.0, dim=-1):
 
 
 def _egrad2rgrad(x, grad, c, dim: int = -1):
-    return grad / _lambda_x(x, c, keepdim=True, dim=dim) ** 2
+    return grad.div_(_lambda_x(x, c, keepdim=True, dim=dim) ** 2)

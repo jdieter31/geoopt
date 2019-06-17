@@ -50,15 +50,10 @@ class Sphere(Manifold):
 
     def _projx(self, x):
         norm = x.norm(dim=-1, keepdim=True)
-        # Avoid any chance of getting NaNs
-        if torch.sum(norm < self.eps) > 0:
-            print('project zero error!')
-            ut = ut + (norm_ut < eps)
-            norm = x.norm(dim=-1, keepdim=True)
-        return x / norm
+        return x.div_(norm)
 
     def _proju(self, x, u):
-        return u - (x * u).sum(dim=-1, keepdim=True) * x
+        return u.sub_((x * u).sum(dim=-1, keepdim=True) * x)
 
     def _expmap(self, x, u, t):
         ut = u * t
@@ -74,7 +69,8 @@ class Sphere(Manifold):
         return torch.where(cond, exp, retr)
 
     def _retr(self, x, u, t):
-        return self._projx(x + u * t)
+        x.add_(u*t)
+        return self._projx(x)
 
     def _transp_follow(self, x, v, *more, u, t):
         y = self._retr(x, u, t)

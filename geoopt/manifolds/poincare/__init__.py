@@ -56,8 +56,8 @@ class PoincareBall(Manifold):
 
     def _retr(self, x, u, t):
         # always assume u is scaled properly
-        approx = x + u * t
-        return math.project(approx, c=self.c)
+        x.add_(u * t)
+        return math.project(x, c=self.c)
 
     _retr_transp_default_preference = "2y"
 

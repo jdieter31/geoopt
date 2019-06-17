@@ -24,7 +24,7 @@ class Euclidean(Manifold):
         return True, None
 
     def _retr(self, x, u, t):
-        return x + t * u
+        return x.add_(t * u)
 
     def _inner(self, x, u, v, keepdim):
         return torch.sum(u * v, -1, keepdim=keepdim)
