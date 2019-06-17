@@ -53,7 +53,7 @@ class Sphere(Manifold):
         return x.div_(norm)
 
     def _proju(self, x, u):
-        return u.sub_((x * u).sum(dim=-1, keepdim=True) * x)
+        return u - (x * u).sum(dim=-1, keepdim=True) * x
 
     def _expmap(self, x, u, t):
         ut = u * t
@@ -69,7 +69,7 @@ class Sphere(Manifold):
         return torch.where(cond, exp, retr)
 
     def _retr(self, x, u, t):
-        x.add_(u*t)
+        x = x.add_(u*t)
         return self._projx(x)
 
     def _transp_follow(self, x, v, *more, u, t):

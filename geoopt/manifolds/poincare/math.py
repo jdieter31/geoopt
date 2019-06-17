@@ -78,15 +78,29 @@ def project(x, *, c=1.0, dim=-1, eps=None):
     return _project(x, c, dim, eps)
 
 
+def project_in_place(x, *, c=1.0, dim=-1, eps=None):
+    if eps is None:
+        eps = BALL_EPS[x.dtype]
+    maxnorm = (1 - eps) / (c ** 0.5)
+    return x.renorm_(2, -2, maxnorm)
+
+
 def _project(x, c, dim: int = -1, eps: float = None):
     if eps is None:
         eps = BALL_EPS[x.dtype]
     maxnorm = (1 - eps) / (c ** 0.5)
 
-    x.renorm_(2, -1, maxnorm)
+    x = x.renorm(2, -2, maxnorm)
 
     return x
-
+    # norm = x.norm(dim=dim, keepdim=True, p=2).clamp_min(MIN_NORM)
+    # if eps is None:
+    #     eps = BALL_EPS[x.dtype]
+    # maxnorm = (1 - eps) / (c ** 0.5)
+    # maxnorm = maxnorm.to(norm)
+    # cond = norm > maxnorm
+    # projected = x / norm * maxnorm
+    # return torch.where(cond, projected, x)
 
 def lambda_x(x, *, c=1.0, keepdim=False, dim=-1):
     r"""
@@ -1301,4 +1315,4 @@ def egrad2rgrad(x, grad, *, c=1.0, dim=-1):
 
 
 def _egrad2rgrad(x, grad, c, dim: int = -1):
-    return grad.div_(_lambda_x(x, c, keepdim=True, dim=dim) ** 2)
+    return grad / _lambda_x(x, c, keepdim=True, dim=dim) ** 2
