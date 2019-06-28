@@ -52,18 +52,24 @@ class PoincareBall(Manifold):
         return math.dist(x, y, c=self.c, keepdim=keepdim)
 
     def _egrad2rgrad(self, x, u):
-        return math.egrad2rgrad(x, u, c=self.c)
+        return math._egrad2rgrad(x, u, c=self.c)
 
-    def _retr(self, x, u, t):
+    def _retr(self, x, u, t, indices=None):
         # always assume u is scaled properly
-        x = x.add_(u * t)
-        math.project_in_place(x, c=self.c)
+        u = u*t
+        if indices is not None:
+            x = x.index_add_(0, indices, u)
+            x.index_copy_(0, indices, math.project_in_place(x[indices], c=self.c))
+        else:
+            x = x.add_(u)
+            math.project_in_place(x, c=self.c)
+
         return x
 
     _retr_transp_default_preference = "2y"
 
     def _projx(self, x):
-        return math.project(x, c=self.c)
+        return math.project_in_place(x, c=self.c)
 
     def _proju(self, x, u):
         return u

@@ -72,24 +72,19 @@ class Product(Manifold):
         return torch.cat(flattened_tensors, dim=-1)
 
     def _projx(self, x: torch.Tensor):
-        proj_vects = []
         for manifold in self.submanifolds:
-            proj_vects.append(manifold.projx(self._get_submanifold_value(x, manifold)))
-        return self._load_from_submanifold_values(proj_vects)
+            manifold.projx(self._get_submanifold_value(x, manifold))
+        return x
 
     def _proju(self, x: torch.Tensor, u: torch.Tensor):
-        proj_vects = []
         for manifold in self.submanifolds:
-            proj_vects.append(manifold.proju(self._get_submanifold_value(x, manifold),
-                                             self._get_submanifold_value(u, manifold)))
-        return self._load_from_submanifold_values(proj_vects)
+            manifold.proju(self._get_submanifold_value(x, manifold), self._get_submanifold_value(u, manifold))
+        return u
 
     def _egrad2rgrad(self, x, u):
-        grad_vects = []
         for manifold in self.submanifolds:
-            grad_vects.append(manifold.egrad2rgrad(self._get_submanifold_value(x, manifold),
-                                                   self._get_submanifold_value(u, manifold)))
-        return self._load_from_submanifold_values(grad_vects)
+            manifold.egrad2rgrad(self._get_submanifold_value(x, manifold), self._get_submanifold_value(u, manifold))
+        return u
 
     def _inner(self, x, u, v, keepdim):
         inner_vects = []
@@ -101,12 +96,10 @@ class Product(Manifold):
                                               self._get_submanifold_value(v, manifold), keepdim=False).unsqueeze(-1))
         return torch.cat(inner_vects, dim=-1).sum(dim=-1, keepdim=keepdim)
 
-    def _retr(self, x, u, t):
-        retr_vects = []
+    def _retr(self, x, u, t, indices=None):
         for manifold in self.submanifolds:
-            retr_vects.append(manifold.retr(self._get_submanifold_value(x, manifold),
-                                             self._get_submanifold_value(u, manifold), t))
-        return self._load_from_submanifold_values(retr_vects)
+            manifold._retr(self._get_submanifold_value(x, manifold), self._get_submanifold_value(u, manifold), t, indices)
+        return x
 
     def _transp_follow_sub(self, x, v, u, t):
         transp_vects = []

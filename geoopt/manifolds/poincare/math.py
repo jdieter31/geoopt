@@ -1315,4 +1315,5 @@ def egrad2rgrad(x, grad, *, c=1.0, dim=-1):
 
 
 def _egrad2rgrad(x, grad, c, dim: int = -1):
-    return grad / _lambda_x(x, c, keepdim=True, dim=dim) ** 2
+    return grad.div_(_lambda_x(x, c, keepdim=True, dim=dim) ** 2)
+

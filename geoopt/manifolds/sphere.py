@@ -48,12 +48,16 @@ class Sphere(Manifold):
     def _inner(self, x, u, v, keepdim):
         return (u * v).sum(-1, keepdim=keepdim)
 
-    def _projx(self, x):
-        norm = x.norm(dim=-1, keepdim=True)
-        return x.div_(norm)
+    def _projx(self, x, indices=None):
+        if indices is not None:
+            norm = x[indices].norm(dim=-1, keepdim=True)
+            x[indices] /= norm
+        else:
+            norm = x.norm(dim=-1, keepdim=True)
+            return x.div_(norm)
 
     def _proju(self, x, u):
-        return u - (x * u).sum(dim=-1, keepdim=True) * x
+        return u.sub_((x * u).sum(dim=-1, keepdim=True) * x)
 
     def _expmap(self, x, u, t):
         ut = u * t
@@ -68,9 +72,13 @@ class Sphere(Manifold):
         cond = norm_ut > 1e-3
         return torch.where(cond, exp, retr)
 
-    def _retr(self, x, u, t):
-        x = x.add_(u*t)
-        return self._projx(x)
+    def _retr(self, x, u, t, indices=None):
+        u = u.mul_(t)
+        if indices is not None:
+            x.index_add_(0, indices, u)
+        else:
+            x = x.add_(u)
+        self._projx(x, indices)
 
     def _transp_follow(self, x, v, *more, u, t):
         y = self._retr(x, u, t)

@@ -23,9 +23,13 @@ class Euclidean(Manifold):
     def _check_vector_on_tangent(self, x, u, atol=1e-5, rtol=1e-5):
         return True, None
 
-    def _retr(self, x, u, t):
-        return x.add_(t * u)
-
+    def _retr(self, x, u, t, indices=None):
+        u = u * t
+        if indices is not None:
+            return x.index_add_(0, indices, u)
+        else:
+            return x.add_(u)
+        
     def _inner(self, x, u, v, keepdim):
         return torch.sum(u * v, -1, keepdim=keepdim)
 
