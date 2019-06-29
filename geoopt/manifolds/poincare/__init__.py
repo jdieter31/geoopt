@@ -59,17 +59,20 @@ class PoincareBall(Manifold):
         u = u*t
         if indices is not None:
             x = x.index_add_(0, indices, u)
-            x.index_copy_(0, indices, math.project_in_place(x[indices], c=self.c))
+            self._projx(x, indices)
         else:
             x = x.add_(u)
-            math.project_in_place(x, c=self.c)
+            self._projx(x)
 
         return x
 
     _retr_transp_default_preference = "2y"
 
-    def _projx(self, x):
-        return math.project_in_place(x, c=self.c)
+    def _projx(self, x, indices=None):
+        if indices is not None:
+            x.index_copy_(0, indices, math.project_in_place(x[indices], c=self.c))
+        else:
+            return math.project_in_place(x, c=self.c)
 
     def _proju(self, x, u):
         return u

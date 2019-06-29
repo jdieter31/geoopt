@@ -82,7 +82,8 @@ def project_in_place(x, *, c=1.0, dim=-1, eps=None):
     if eps is None:
         eps = BALL_EPS[x.dtype]
     maxnorm = (1 - eps) / (c ** 0.5)
-    return x.renorm_(2, -2, maxnorm)
+    x.view(-1, x.size()[-1]).renorm_(2, 0, maxnorm)
+    return x
 
 
 def _project(x, c, dim: int = -1, eps: float = None):
@@ -90,7 +91,7 @@ def _project(x, c, dim: int = -1, eps: float = None):
         eps = BALL_EPS[x.dtype]
     maxnorm = (1 - eps) / (c ** 0.5)
 
-    x = x.renorm(2, -2, maxnorm)
+    x = x.renorm(2, 0, maxnorm)
 
     return x
     # norm = x.norm(dim=dim, keepdim=True, p=2).clamp_min(MIN_NORM)
